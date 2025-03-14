@@ -1,0 +1,37 @@
+# Dependencias de Node.js
+node_modules/
+bun.lockb
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Archivos de compilación y salida
+dist/
+.build/
+.cache/
+output/
+coverage/
+*.log
+
+# Archivos de entorno y configuración sensible
+.env
+.env.local
+.env.*.local
+!.env.example  # Si tienes un ejemplo de configuración, se puede incluir
+
+# Directorios de configuración del editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Configuración de Docker
+docker-compose.override.yml
+.dockerignore
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
