@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_authenticated/')({
   component: Index,
 })
 
@@ -25,7 +25,11 @@ async function getTotalSpent(){
 
 
 function Index() {
-  const {isPending, error,data} = useQuery({ queryKey: ['get-total-spent'], queryFn: getTotalSpent })
+  const {isPending, error,data} = useQuery({ 
+    queryKey: ['get-total-spent'], 
+    queryFn: getTotalSpent 
+  });
+  
   if(error) return 'An error has ocurred: '+error.message
 
   return (
