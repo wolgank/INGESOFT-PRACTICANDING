@@ -1,24 +1,35 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query';
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { userQueryOptions } from "@/lib/api";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-
-export const Route = createFileRoute('/_authenticated/profile')({
+export const Route = createFileRoute("/_authenticated/profile")({
   component: Profile,
-})
-
+});
 
 function Profile() {
-  const {isPending, error,data} = useQuery(userQueryOptions);
-  if(isPending)return "Loading"
-  if(error) return "not logged in"
-  return <div className="p-2">Hello from About!
-    <p>Hello {data.user.family_name}</p>
-      <a href="/api/logout">
-        <Button variant="destructive" className="px-6 py-2 text-lg">
+  const { isPending, error, data } = useQuery(userQueryOptions);
+  if (isPending) return "Loading";
+  if (error) return "not logged in";
+  return (
+    <div className="p-2 mx-auto w-full">
+      <div className="flex items-center gap-2">
+        <Avatar>
+          {data.user.picture && (
+            <AvatarImage src={data?.user.picture} alt={data.user.given_name} />
+          )}
+          <AvatarFallback>{data.user.given_name}</AvatarFallback>
+        </Avatar>
+        <p>
+          {data.user.given_name} {data.user.family_name}
+        </p>
+      </div>
+        <Button asChild className="my-4" variant="destructive">
+          <a href="/api/logout">
             Logout
-        </Button>
-      </a>
-  </div>
+          </a>
+        </Button> 
+    </div>
+  );
 }

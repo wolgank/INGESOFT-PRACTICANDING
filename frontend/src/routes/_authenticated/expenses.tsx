@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -10,30 +9,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
+
+import {
+  deleteExpense,
+  getAllExpensesQueryOptions,
+  loadingCreateExpenseQueryOptions,
+} from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Trash } from "lucide-react";
+import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/expenses")({
   component: Expenses,
 });
-
-async function getAllExpenses() {
-  //await new Promise((r)=>setTimeout(r,3000))
-  const res = await api.expenses.$get();
-  if (!res.ok) {
-    throw new Error("server error");
-  }
-  const data = await res.json();
-  return data;
-}
-
 function Expenses() {
-  const { isPending, error, data } = useQuery({
-    queryKey: ["get-all-expenses"],
-    queryFn: getAllExpenses,
-  });
+  const { isPending, error, data } = useQuery(getAllExpensesQueryOptions);
+  const { data: loadingCreateExpense } = useQuery(
+    loadingCreateExpenseQueryOptions
+  );
   if (error) return "An error has ocurred: " + error.message;
 
   return (
-    <div className="p-2 max-w-3xl m-auto">
+    <div className="w-full p-2 max-w-3xl m-auto">
       <Table>
         <TableCaption>A list of all your expenses.</TableCaption>
         <TableHeader>
@@ -41,27 +38,98 @@ function Expenses() {
             <TableHead className="w-[100px]">ID</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Amount</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Delete</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {isPending? 
-          Array(3).fill(0).map((_,i)=>(
-              <TableRow key={i}>
-              <TableCell className="font-medium"><Skeleton className="h-4" /></TableCell>
-              <TableCell><Skeleton className="h-4" /></TableCell>
-              <TableCell><Skeleton className="h-4" /></TableCell>
+          {loadingCreateExpense?.expense && (
+            <TableRow>
+              <TableCell className="font-medium">
+                <Skeleton className="h-4" />
+              </TableCell>
+              <TableCell>{loadingCreateExpense?.expense.category}</TableCell>
+              <TableCell>{loadingCreateExpense?.expense.amount}</TableCell>
+              <TableCell>
+                {loadingCreateExpense?.expense.date.split("T")[0]}
+              </TableCell>
+              <TableCell>
+                <Skeleton className="font-medium" />
+                <Skeleton className="h-4" />
+              </TableCell>
             </TableRow>
-            ))
-          :
-            data?.expenses.map((expense)=>(
-              <TableRow key={expense.id}>
-              <TableCell className="font-medium">{expense.id}</TableCell>
-              <TableCell>{expense.category}</TableCell>
-              <TableCell>{expense.amount}</TableCell>
-            </TableRow>
-            ))}
+          )}
+          {isPending
+            ? Array(3)
+                .fill(0)
+                .map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">
+                      <Skeleton className="h-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4" />
+                    </TableCell>
+                  </TableRow>
+                ))
+            : data?.expenses.map((expense) => (
+                <TableRow key={expense.id}>
+                  <TableCell className="font-medium">{expense.id}</TableCell>
+                  <TableCell>{expense.category}</TableCell>
+                  <TableCell>{expense.amount}</TableCell>
+                  <TableCell>{expense.date.split("T")[0]}</TableCell>
+                  <TableCell>
+                    <ExpenseDeleteButton id={expense.id} />
+                  </TableCell>
+                </TableRow>
+              ))}
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+function ExpenseDeleteButton({ id }: { id: number }) {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      // I will fire first
+      queryClient.setQueryData(
+        getAllExpensesQueryOptions.queryKey,
+        (existingExpenses) => ({
+          ...existingExpenses,
+          expenses: existingExpenses!.expenses.filter((e) => e.id !== id),
+        })
+      );
+      toast("Expense deleted", {
+        description: `Successfully deleted expense: ${id}`,
+      });
+    },
+    onError: () => {
+      // I will fire first
+      toast("Error", {
+        description: `Failed to delete expense: ${id}`,
+      });
+    },
+  });
+  return (
+    <Button
+      disabled={mutation.isPending}
+      onClick={() => mutation.mutate({ id })}
+      variant="outline"
+      size="icon"
+    >
+      {mutation.isPending ? "..." : <Trash className="h-4 w-4" />}
+    </Button>
   );
 }
