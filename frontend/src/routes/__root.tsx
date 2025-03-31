@@ -15,7 +15,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 function NavBar() {
   return (
     <div className="p-2 flex justify-between  max-w-2xl m-auto items-baseline">
-      <Link to="/" className="[&.active]:font-bold mr-auto pr-8">
+      <Link to="/" className="[&.active]:font-bold mr-auto pr-8 bg-white">
         <h1 className="text-2xl fond-bold ">Expense Tracker</h1>
       </Link>
       <div className=" flex gap-2">
